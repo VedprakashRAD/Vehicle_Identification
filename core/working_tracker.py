@@ -17,7 +17,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 # Import license plate detector
 try:
-    from license_plate.detector import LicensePlateDetector
+    from license_plate.advanced_detector import AdvancedLicensePlateDetector
     PLATE_DETECTION_AVAILABLE = True
 except ImportError as e:
     PLATE_DETECTION_AVAILABLE = False
@@ -48,7 +48,8 @@ class WorkingVehicleTracker:
         # Vehicle tracking
         self.tracked_vehicles = {}  # Store vehicle positions and IDs
         self.next_vehicle_id = 1
-        self.processed_vehicles = set()  # Track which vehicles have been processed for plates
+        self.frame_count = 0  # Add frame counter for debugging
+        # Remove processed_vehicles tracking to allow continuous plate detection
         
     def load_model(self):
         """Load YOLO model"""
@@ -72,7 +73,7 @@ class WorkingVehicleTracker:
         if PLATE_DETECTION_AVAILABLE:
             try:
                 print("📦 Loading license plate detector...")
-                self.plate_detector = LicensePlateDetector()
+                self.plate_detector = AdvancedLicensePlateDetector()
                 print("✅ License plate detector loaded successfully")
             except Exception as e:
                 print(f"❌ Error loading plate detector: {e}")
@@ -88,6 +89,7 @@ class WorkingVehicleTracker:
         
         if self.model is not None:
             try:
+                self.frame_count += 1
                 # Run inference
                 results = self.model(frame, conf=self.confidence_threshold)
                 
@@ -114,25 +116,51 @@ class WorkingVehicleTracker:
                                 color = self.get_color_for_vehicle(vehicle_type)
                                 cv2.rectangle(processed_frame, (x1, y1), (x2, y2), color, 2)
                                 
-                                # Draw label with vehicle ID
-                                label = f'{vehicle_type.upper()} {vehicle_id} ({confidence:.2f})'
+                                # Get recent plate for this vehicle
+                                recent_plate = ""
+                                if self.plate_detector:
+                                    recent_detections = self.plate_detector.get_recent_detections(10)
+                                    for detection in reversed(recent_detections):
+                                        if detection.get('vehicle_id') == vehicle_id:
+                                            recent_plate = detection.get('plate_text', '')
+                                            break
+                                
+                                # Draw label with vehicle ID and plate
+                                if recent_plate:
+                                    label = f'{vehicle_type.upper()} {vehicle_id} | {recent_plate}'
+                                else:
+                                    label = f'{vehicle_type.upper()} {vehicle_id} ({confidence:.2f})'
+                                
                                 label_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)[0]
                                 cv2.rectangle(processed_frame, (x1, y1 - label_size[1] - 10), (x1 + label_size[0], y1), color, -1)
                                 cv2.putText(processed_frame, label, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
                                 
-                                # Process license plate ONLY if vehicle hasn't been processed
-                                if self.plate_detector is not None and vehicle_id not in self.processed_vehicles:
-                                    plate_results = self.plate_detector.process_vehicle_for_plates(
-                                        frame, (x1, y1, x2, y2), vehicle_id
-                                    )
-                                    
-                                    if plate_results:
-                                        self.license_plate_detections.extend(plate_results)
-                                        self.processed_vehicles.add(vehicle_id)
-                                        # Draw license plate detections
-                                        processed_frame = self.plate_detector.draw_plate_detections(
-                                            processed_frame, plate_results
+                                # Process license plate for every detection (not just once per vehicle)
+                                if self.plate_detector is not None:
+                                    try:
+                                        plate_results = self.plate_detector.process_vehicle_for_plates(
+                                            frame, (x1, y1, x2, y2), vehicle_id
                                         )
+                                        
+                                        if plate_results:
+                                            print(f"🎯 License plate detected for vehicle {vehicle_id}: {len(plate_results)} plates")
+                                            # Only add unique plates to avoid duplicates
+                                            for plate_result in plate_results:
+                                                plate_text = plate_result.get('plate_text', '')
+                                                if plate_text and not any(p.get('plate_text') == plate_text for p in self.license_plate_detections[-5:]):
+                                                    self.license_plate_detections.append(plate_result)
+                                                    print(f"📝 Added license plate: {plate_text}")
+                                            
+                                            # Draw license plate detections
+                                            processed_frame = self.plate_detector.draw_plate_detections(
+                                                processed_frame, plate_results
+                                            )
+                                        else:
+                                            # Debug: Try to understand why no plates detected
+                                            if self.frame_count % 30 == 0:  # Log every 30 frames to avoid spam
+                                                print(f"🔍 No license plates detected for vehicle {vehicle_id} at bbox {(x1, y1, x2, y2)}")
+                                    except Exception as e:
+                                        print(f"❌ Error in license plate detection: {e}")
                                 
                                 # Count detection
                                 current_detections[vehicle_type] += 1
@@ -264,7 +292,8 @@ class WorkingVehicleTracker:
         self.license_plate_detections = []
         self.tracked_vehicles = {}
         self.next_vehicle_id = 1
-        self.processed_vehicles = set()
+        self.frame_count = 0
+        # Removed processed_vehicles to allow continuous detection
         
     def get_vehicle_details(self):
         """Get vehicle details including license plates"""
