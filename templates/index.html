@@ -285,6 +285,10 @@
                         <span class="stat-value" id="activeCount">0</span>
                     </div>
                     <div class="stat-item">
+                        <span>License Plates:</span>
+                        <span class="stat-value" id="licensePlateCount">0</span>
+                    </div>
+                    <div class="stat-item">
                         <span>Last Updated:</span>
                         <span class="stat-value" id="lastUpdated">Never</span>
                     </div>
@@ -299,7 +303,8 @@
                         <select id="videoSource">
                             <option value="0">Default Camera</option>
                             <option value="1">Camera 1</option>
-                            <option value="test_video.mp4">Test Video</option>
+                            <option value="vehicle_test_video.mp4">Vehicle Test Video</option>
+                            <option value="test_video.mp4">Basic Test Video</option>
                         </select>
                     </div>
                     
@@ -341,10 +346,11 @@
                                 <th style="padding: 8px; border: 1px solid #ddd;">Status</th>
                                 <th style="padding: 8px; border: 1px solid #ddd;">Entry Time</th>
                                 <th style="padding: 8px; border: 1px solid #ddd;">Exit Time</th>
+                                <th style="padding: 8px; border: 1px solid #ddd;">Confidence</th>
                             </tr>
                         </thead>
                         <tbody id="vehicleTableBody">
-                            <tr><td colspan="6" style="text-align: center; padding: 20px;">No vehicle data available</td></tr>
+                            <tr><td colspan="7" style="text-align: center; padding: 20px;">No vehicle data available</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -421,6 +427,7 @@
             document.getElementById('busCount').textContent = data.vehicle_counts.bus || 0;
             document.getElementById('truckCount').textContent = data.vehicle_counts.truck || 0;
             document.getElementById('activeCount').textContent = data.active_tracks || 0;
+            document.getElementById('licensePlateCount').textContent = (data.license_plates && data.license_plates.length) || 0;
             
             const lastUpdated = new Date(data.timestamp).toLocaleTimeString();
             document.getElementById('lastUpdated').textContent = lastUpdated;
@@ -527,13 +534,15 @@
             .then(data => {
                 const tableBody = document.getElementById('vehicleTableBody');
                 if (data.length === 0) {
-                    tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">No vehicle data available</td></tr>';
+                    tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">No vehicle data available</td></tr>';
                     return;
                 }
                 
                 tableBody.innerHTML = data.map(vehicle => {
                     const statusColor = vehicle.status === 'Entry' ? '#28a745' : 
                                        vehicle.status === 'Exit' ? '#dc3545' : '#ffc107';
+                    const confidenceColor = (vehicle.confidence || 0) > 0.8 ? '#28a745' : 
+                                           (vehicle.confidence || 0) > 0.5 ? '#ffc107' : '#dc3545';
                     return `
                         <tr>
                             <td style="padding: 8px; border: 1px solid #ddd;">${vehicle.vehicle_id}</td>
@@ -542,6 +551,7 @@
                             <td style="padding: 8px; border: 1px solid #ddd; color: ${statusColor}; font-weight: bold;">${vehicle.status}</td>
                             <td style="padding: 8px; border: 1px solid #ddd;">${vehicle.entry_time}</td>
                             <td style="padding: 8px; border: 1px solid #ddd;">${vehicle.exit_time || 'N/A'}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; color: ${confidenceColor}; font-weight: bold;">${((vehicle.confidence || 0) * 100).toFixed(1)}%</td>
                         </tr>
                     `;
                 }).join('');

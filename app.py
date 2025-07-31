@@ -26,7 +26,7 @@ def main():
     # Create and run dashboard
     dashboard = VehicleDashboard(
         host='0.0.0.0',
-        port=9005,
+        port=9002,
         debug=True
     )
     

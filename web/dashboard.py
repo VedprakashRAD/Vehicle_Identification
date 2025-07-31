@@ -227,23 +227,36 @@ class VehicleDashboard:
                 logger.info("🎬 Opening camera for monitoring...")
                 # Try different camera indices
                 for camera_idx in [0, 1, 2]:
+                    logger.info(f"🔍 Trying camera index {camera_idx}...")
                     cap = cv2.VideoCapture(camera_idx)
                     if cap.isOpened():
-                        logger.info(f"✅ Camera {camera_idx} opened successfully")
-                        # Set camera properties for better performance
-                        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-                        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-                        cap.set(cv2.CAP_PROP_FPS, 30)
-                        break
+                        # Test if camera actually works
+                        ret, test_frame = cap.read()
+                        if ret and test_frame is not None:
+                            logger.info(f"✅ Camera {camera_idx} opened successfully")
+                            # Set camera properties for better performance
+                            cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+                            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+                            cap.set(cv2.CAP_PROP_FPS, 30)
+                            break
+                        else:
+                            logger.warning(f"⚠️ Camera {camera_idx} opened but can't read frames")
+                    else:
+                        logger.warning(f"❌ Camera {camera_idx} failed to open")
                     cap.release()
                     cap = None
                 
-                # If no camera found, try test video
+                # If no camera found, try test videos
                 if cap is None:
-                    logger.info("📹 Trying test video...")
-                    cap = cv2.VideoCapture("test_video.mp4")
+                    logger.info("📹 Trying vehicle test video...")
+                    cap = cv2.VideoCapture("vehicle_test_video.mp4")
                     if cap.isOpened():
-                        logger.info("✅ Test video opened successfully")
+                        logger.info("✅ Vehicle test video opened successfully")
+                    else:
+                        logger.info("📹 Trying basic test video...")
+                        cap = cv2.VideoCapture("test_video.mp4")
+                        if cap.isOpened():
+                            logger.info("✅ Basic test video opened successfully")
                 
                 # If still no source, create demo frames
                 if cap is None or not cap.isOpened():
