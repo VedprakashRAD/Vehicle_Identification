@@ -17,7 +17,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 # Import license plate detector
 try:
-    from license_plate.advanced_detector import AdvancedLicensePlateDetector
+    from license_plate.intelligent_detector import IntelligentLicensePlateDetector
     PLATE_DETECTION_AVAILABLE = True
 except ImportError as e:
     PLATE_DETECTION_AVAILABLE = False
@@ -73,7 +73,7 @@ class WorkingVehicleTracker:
         if PLATE_DETECTION_AVAILABLE:
             try:
                 print("📦 Loading license plate detector...")
-                self.plate_detector = AdvancedLicensePlateDetector()
+                self.plate_detector = IntelligentLicensePlateDetector()
                 print("✅ License plate detector loaded successfully")
             except Exception as e:
                 print(f"❌ Error loading plate detector: {e}")
