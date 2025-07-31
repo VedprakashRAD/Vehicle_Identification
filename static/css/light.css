@@ -1,0 +1,19 @@
+/* Light Theme CSS */
+body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #333;
+}
+
+.container {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+}
+
+.header h1 {
+    color: white;
+}
+
+.video-panel, .stats-panel, .controls-panel, .chart-panel, .export-section {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}

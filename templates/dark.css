@@ -1,0 +1,15 @@
+/* Dark Theme */
+body {
+    background-color: #121212;
+    color: #ffffff;
+}
+.container {
+    background: #1e1e1e;
+    box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1);
+}
+.chart-container {
+    box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1);
+}
+h1, h3 {
+    color: #ffffff;
+}
