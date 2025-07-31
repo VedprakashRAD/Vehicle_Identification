@@ -138,7 +138,10 @@ class VehicleDashboard:
         @self.app.route('/api/vehicle_details')
         def get_vehicle_details():
             if self.vehicle_counter:
-                return jsonify(self.vehicle_counter.get_vehicle_details())
+                details = self.vehicle_counter.get_vehicle_details()
+                print(f"Vehicle details API returning: {len(details)} entries")
+                return jsonify(details)
+            print("No vehicle counter available")
             return jsonify([])
 
         @self.app.route('/start_monitoring', methods=['POST'])

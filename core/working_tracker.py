@@ -148,8 +148,9 @@ class WorkingVehicleTracker:
                                             for plate_result in plate_results:
                                                 plate_text = plate_result.get('plate_text', '')
                                                 if plate_text and not any(p.get('plate_text') == plate_text for p in self.license_plate_detections[-5:]):
+                                                    plate_result['vehicle_type'] = vehicle_type
                                                     self.license_plate_detections.append(plate_result)
-                                                    print(f"📝 Added license plate: {plate_text}")
+                                                    print(f"📝 Added license plate: {plate_text} for {vehicle_type}")
                                             
                                             # Draw license plate detections
                                             processed_frame = self.plate_detector.draw_plate_detections(
@@ -300,17 +301,24 @@ class WorkingVehicleTracker:
         details = []
         recent_plates = self.get_recent_license_plates(20)
         
+        print(f"Processing {len(recent_plates)} recent plates for vehicle details")
+        
         # Create vehicle details with license plate info
         for i, plate in enumerate(recent_plates):
+            vehicle_type = plate.get('vehicle_type', 'Car')
+            confidence = plate.get('confidence', 0.0)
+            
             details.append({
                 'vehicle_id': plate.get('vehicle_id', f'V{i+1}'),
                 'registration_number': plate.get('plate_text', 'Unknown'),
-                'vehicle_type': 'Car',  # Default, could be enhanced
+                'vehicle_type': vehicle_type.title(),
                 'status': 'Entry',
                 'entry_time': datetime.fromisoformat(plate['timestamp']).strftime('%H:%M:%S'),
                 'exit_time': None,
-                'confidence': plate.get('confidence', 0.0)
+                'confidence': confidence
             })
+        
+        print(f"Created {len(details)} vehicle detail entries")
         
         # Add demo data if no plates detected
         if not details:
