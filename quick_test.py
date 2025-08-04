@@ -1,70 +1,81 @@
 #!/usr/bin/env python3
 """
-Quick test of vehicle detection - runs for limited frames
+Quick test script for vehicle detection system
 """
 
-import cv2
+import logging
 import sys
-import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from pathlib import Path
+
+# Add project root to path
+project_root = Path(__file__).parent
+sys.path.insert(0, str(project_root))
 
 from core.working_tracker import WorkingVehicleTracker
+from core.camera_manager import CameraManager
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def quick_test():
-    print("🚗 Quick Vehicle Detection Test...")
+    """Quick test of vehicle detection system"""
+    logger.info("🚗 Starting Quick Vehicle Detection Test...")
     
-    # Initialize tracker
+    # Initialize components
     tracker = WorkingVehicleTracker(confidence_threshold=0.3)
+    camera_manager = CameraManager()
     
-    # Try vehicle test video first
-    cap = cv2.VideoCapture('vehicle_test_video.mp4')
-    if not cap.isOpened():
-        cap = cv2.VideoCapture(0)  # Try camera
-        if not cap.isOpened():
-            print("❌ No video source available")
-            return
+    # Initialize camera
+    if not camera_manager.initialize_camera():
+        logger.error("❌ Failed to initialize camera or video source")
+        return
     
-    print("✅ Video source opened")
+    logger.info("✅ Camera/video source initialized")
+    logger.info(f"Source info: {camera_manager.get_source_info()}")
     
     frame_count = 0
-    max_frames = 100  # Limit to 100 frames
+    max_frames = 100  # Limit test to 100 frames
     
-    while frame_count < max_frames:
-        ret, frame = cap.read()
-        if not ret:
-            # Loop video
-            cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
-            continue
-        
-        # Process frame
-        processed_frame, stats = tracker.process_frame_for_web(frame)
-        
-        frame_count += 1
-        
-        # Print stats every 20 frames
-        if frame_count % 20 == 0:
-            print(f"Frame {frame_count}: Active={stats['active_tracks']}, "
-                  f"Total={stats['total_count']}, "
-                  f"Cars={stats['vehicle_counts']['car']}, "
-                  f"Motorcycles={stats['vehicle_counts']['motorcycle']}, "
-                  f"Buses={stats['vehicle_counts']['bus']}, "
-                  f"Trucks={stats['vehicle_counts']['truck']}")
+    try:
+        while frame_count < max_frames:
+            ret, frame = camera_manager.read_frame()
+            if not ret:
+                logger.warning("Failed to read frame")
+                continue
+            
+            # Process frame
+            processed_frame, stats = tracker.process_frame_for_web(frame)
+            frame_count += 1
+            
+            # Print stats every 20 frames
+            if frame_count % 20 == 0:
+                logger.info(f"Frame {frame_count}: Active={stats['active_tracks']}, "
+                          f"Total={stats['total_count']}, "
+                          f"Cars={stats['vehicle_counts']['car']}, "
+                          f"Motorcycles={stats['vehicle_counts']['motorcycle']}, "
+                          f"Buses={stats['vehicle_counts']['bus']}, "
+                          f"Trucks={stats['vehicle_counts']['truck']}")
     
-    cap.release()
+    except KeyboardInterrupt:
+        logger.info("Test interrupted by user")
+    
+    finally:
+        camera_manager.release()
     
     # Final results
     final_stats = tracker.latest_stats
-    print("\n📊 Final Results:")
-    print(f"  Total Vehicles: {final_stats['total_count']}")
-    print(f"  Cars: {final_stats['vehicle_counts']['car']}")
-    print(f"  Motorcycles: {final_stats['vehicle_counts']['motorcycle']}")
-    print(f"  Buses: {final_stats['vehicle_counts']['bus']}")
-    print(f"  Trucks: {final_stats['vehicle_counts']['truck']}")
+    logger.info("\n📊 Final Results:")
+    logger.info(f"  Total Vehicles: {final_stats['total_count']}")
+    logger.info(f"  Cars: {final_stats['vehicle_counts']['car']}")
+    logger.info(f"  Motorcycles: {final_stats['vehicle_counts']['motorcycle']}")
+    logger.info(f"  Buses: {final_stats['vehicle_counts']['bus']}")
+    logger.info(f"  Trucks: {final_stats['vehicle_counts']['truck']}")
     
     if final_stats['total_count'] > 0:
-        print("✅ Vehicle detection is working!")
+        logger.info("✅ Vehicle detection is working!")
     else:
-        print("⚠️ No vehicles detected - may need real vehicle images")
+        logger.info("⚠️ No vehicles detected - may need real vehicle images")
 
 if __name__ == "__main__":
     quick_test()
