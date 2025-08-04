@@ -13,13 +13,18 @@ except ImportError:
     logging.warning("Ultralytics YOLO not available, using demo mode")
 
 try:
-    from license_plate.intelligent_detector import IntelligentLicensePlateDetector
+    from license_plate.tiny_detector import TinyEnhancedDetector
     PLATE_DETECTION_AVAILABLE = True
 except ImportError as e:
     PLATE_DETECTION_AVAILABLE = False
-    logging.warning(f"License plate detection not available: {e}")
+    logging.warning(f"Tiny detector not available: {e}")
+    try:
+        from license_plate.intelligent_detector import IntelligentLicensePlateDetector
+        PLATE_DETECTION_AVAILABLE = True
+    except ImportError:
+        logging.warning("No plate detection available")
 
-from config.settings import model_config, ui_config
+from config.settings import model_config, ui_config, llm_config
 
 logger = logging.getLogger(__name__)
 
@@ -72,17 +77,24 @@ class WorkingVehicleTracker:
             self.model = None
     
     def _load_plate_detector(self):
-        """Load license plate detector with error handling"""
+        """Load TinyLLaVA enhanced detector"""
         if not PLATE_DETECTION_AVAILABLE:
             logger.info("License plate detection not available")
             return
             
         try:
-            logger.info("Loading license plate detector")
-            self.plate_detector = IntelligentLicensePlateDetector()
-            logger.info("License plate detector loaded successfully")
+            logger.info("Loading TinyLLaVA detector")
+            
+            try:
+                self.plate_detector = TinyEnhancedDetector()
+                logger.info("TinyLLaVA detector loaded (150MB)")
+            except (ImportError, NameError):
+                from license_plate.intelligent_detector import IntelligentLicensePlateDetector
+                self.plate_detector = IntelligentLicensePlateDetector()
+                logger.info("Using traditional detector")
+                
         except Exception as e:
-            logger.error(f"Error loading plate detector: {e}")
+            logger.error(f"Error loading detector: {e}")
             self.plate_detector = None
         
     def process_frame_for_web(self, frame: np.ndarray) -> Tuple[np.ndarray, Dict]:

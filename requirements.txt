@@ -22,6 +22,10 @@ pytesseract>=0.3.8
 pyyaml>=5.4.0
 tqdm>=4.62.0
 psutil>=5.8.0
+requests>=2.25.0
+
+# TinyLLaVA (150MB)
+transformers>=4.35.0
 
 # Visualization (optional)
 matplotlib>=3.4.0

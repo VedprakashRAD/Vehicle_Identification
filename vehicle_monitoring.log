@@ -248,3 +248,174 @@
 2025-08-04 11:02:50,103 - core.working_tracker - INFO - Processing 20 recent plates for vehicle details
 2025-08-04 11:02:50,103 - core.working_tracker - INFO - Created 20 vehicle detail entries
 2025-08-04 11:02:50,103 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 11:02:50] "GET /api/vehicle_details HTTP/1.1" 200 -
+2025-08-04 17:52:53,559 - __main__ - INFO - 🚗 Starting AI Vehicle Monitoring System...
+2025-08-04 17:52:53,559 - __main__ - INFO - ==================================================
+2025-08-04 17:52:53,571 - __main__ - INFO - Dashboard starting on 0.0.0.0:9002
+2025-08-04 17:52:53,571 - web.dashboard - INFO - Starting Vehicle Monitoring Web Dashboard...
+2025-08-04 17:52:53,571 - web.dashboard - INFO - Access the dashboard at: http://0.0.0.0:9002
+2025-08-04 17:52:53,592 - werkzeug - WARNING -  * Debugger is active!
+2025-08-04 17:52:53,600 - werkzeug - INFO -  * Debugger PIN: 854-893-439
+2025-08-04 17:52:53,796 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:52:53] "GET /socket.io/?EIO=4&transport=polling&t=PXr2EHX HTTP/1.1" 200 -
+2025-08-04 17:52:53,799 - web.dashboard - INFO - Client connected
+2025-08-04 17:52:53,800 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:52:53] "POST /socket.io/?EIO=4&transport=polling&t=PXr2EHb&sid=gRWvImRdk0Fp1EFGAAAA HTTP/1.1" 200 -
+2025-08-04 17:52:53,800 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:52:53] "GET /socket.io/?EIO=4&transport=polling&t=PXr2EHc&sid=gRWvImRdk0Fp1EFGAAAA HTTP/1.1" 200 -
+2025-08-04 17:52:53,803 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:52:53] "GET /socket.io/?EIO=4&transport=polling&t=PXr2EHg&sid=gRWvImRdk0Fp1EFGAAAA HTTP/1.1" 200 -
+2025-08-04 17:54:04,701 - werkzeug - INFO -  * Detected change in '/Users/vedprakashchaubey/Downloads/readyAssist/Vehicle_Identification_/config/settings.py', reloading
+2025-08-04 17:54:06,824 - __main__ - INFO - 🚗 Starting AI Vehicle Monitoring System...
+2025-08-04 17:54:06,824 - __main__ - INFO - ==================================================
+2025-08-04 17:54:06,841 - __main__ - INFO - Dashboard starting on 0.0.0.0:9002
+2025-08-04 17:54:06,841 - web.dashboard - INFO - Starting Vehicle Monitoring Web Dashboard...
+2025-08-04 17:54:06,841 - web.dashboard - INFO - Access the dashboard at: http://0.0.0.0:9002
+2025-08-04 17:54:06,864 - werkzeug - WARNING -  * Debugger is active!
+2025-08-04 17:54:06,872 - werkzeug - INFO -  * Debugger PIN: 854-893-439
+2025-08-04 17:54:06,889 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:54:06] "GET /socket.io/?EIO=4&transport=polling&t=PXr2W6A HTTP/1.1" 200 -
+2025-08-04 17:54:06,893 - web.dashboard - INFO - Client connected
+2025-08-04 17:54:06,893 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:54:06] "POST /socket.io/?EIO=4&transport=polling&t=PXr2W7h&sid=yX1-e9a29xMvaLwZAAAA HTTP/1.1" 200 -
+2025-08-04 17:54:06,893 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:54:06] "GET /socket.io/?EIO=4&transport=polling&t=PXr2W7h.0&sid=yX1-e9a29xMvaLwZAAAA HTTP/1.1" 200 -
+2025-08-04 17:54:06,896 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:54:06] "GET /socket.io/?EIO=4&transport=polling&t=PXr2W7l&sid=yX1-e9a29xMvaLwZAAAA HTTP/1.1" 200 -
+2025-08-04 17:54:10,795 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:54:10] "GET /api/hourly_summary?days=1 HTTP/1.1" 200 -
+2025-08-04 17:55:34,341 - werkzeug - INFO -  * Detected change in '/Users/vedprakashchaubey/Downloads/readyAssist/Vehicle_Identification_/core/working_tracker.py', reloading
+2025-08-04 17:55:36,536 - __main__ - INFO - 🚗 Starting AI Vehicle Monitoring System...
+2025-08-04 17:55:36,536 - __main__ - INFO - ==================================================
+2025-08-04 17:55:36,554 - __main__ - INFO - Dashboard starting on 0.0.0.0:9002
+2025-08-04 17:55:36,554 - web.dashboard - INFO - Starting Vehicle Monitoring Web Dashboard...
+2025-08-04 17:55:36,554 - web.dashboard - INFO - Access the dashboard at: http://0.0.0.0:9002
+2025-08-04 17:55:36,574 - werkzeug - WARNING -  * Debugger is active!
+2025-08-04 17:55:36,583 - werkzeug - INFO -  * Debugger PIN: 854-893-439
+2025-08-04 17:55:36,797 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:55:36] "GET /socket.io/?EIO=4&transport=polling&t=PXr2s4Q HTTP/1.1" 200 -
+2025-08-04 17:55:36,799 - web.dashboard - INFO - Client connected
+2025-08-04 17:55:36,799 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:55:36] "POST /socket.io/?EIO=4&transport=polling&t=PXr2s4T&sid=dkZarqTyisDT-EhNAAAA HTTP/1.1" 200 -
+2025-08-04 17:55:36,800 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:55:36] "GET /socket.io/?EIO=4&transport=polling&t=PXr2s4U&sid=dkZarqTyisDT-EhNAAAA HTTP/1.1" 200 -
+2025-08-04 17:56:18,065 - __main__ - INFO - 🚗 Starting AI Vehicle Monitoring System...
+2025-08-04 17:56:18,065 - __main__ - INFO - ==================================================
+2025-08-04 17:56:18,078 - __main__ - INFO - Dashboard starting on 0.0.0.0:9002
+2025-08-04 17:56:18,078 - web.dashboard - INFO - Starting Vehicle Monitoring Web Dashboard...
+2025-08-04 17:56:18,078 - web.dashboard - INFO - Access the dashboard at: http://0.0.0.0:9002
+2025-08-04 17:56:18,099 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:9002
+ * Running on http://10.1.2.65:9002
+2025-08-04 17:56:18,099 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-04 17:56:18,100 - werkzeug - INFO -  * Restarting with stat
+2025-08-04 17:56:19,392 - __main__ - INFO - 🚗 Starting AI Vehicle Monitoring System...
+2025-08-04 17:56:19,392 - __main__ - INFO - ==================================================
+2025-08-04 17:56:19,404 - __main__ - INFO - Dashboard starting on 0.0.0.0:9002
+2025-08-04 17:56:19,404 - web.dashboard - INFO - Starting Vehicle Monitoring Web Dashboard...
+2025-08-04 17:56:19,404 - web.dashboard - INFO - Access the dashboard at: http://0.0.0.0:9002
+2025-08-04 17:56:19,422 - werkzeug - WARNING -  * Debugger is active!
+2025-08-04 17:56:19,430 - werkzeug - INFO -  * Debugger PIN: 854-893-439
+2025-08-04 17:56:21,802 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:56:21] "GET /socket.io/?EIO=4&transport=polling&t=PXr313Z HTTP/1.1" 200 -
+2025-08-04 17:56:21,811 - web.dashboard - INFO - Client connected
+2025-08-04 17:56:21,812 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:56:21] "POST /socket.io/?EIO=4&transport=polling&t=PXr313i&sid=x6LJYcKAoCBxV3GUAAAA HTTP/1.1" 200 -
+2025-08-04 17:56:21,814 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:56:21] "GET /socket.io/?EIO=4&transport=polling&t=PXr313i.0&sid=x6LJYcKAoCBxV3GUAAAA HTTP/1.1" 200 -
+2025-08-04 17:57:12,930 - web.dashboard - INFO - Client disconnected
+2025-08-04 17:57:12,931 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:57:12] "GET /socket.io/?EIO=4&transport=websocket&sid=x6LJYcKAoCBxV3GUAAAA HTTP/1.1" 200 -
+2025-08-04 17:57:12,940 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:57:12] "GET / HTTP/1.1" 200 -
+2025-08-04 17:57:12,951 - web.dashboard - INFO - 🔍 Starting video feed generation...
+2025-08-04 17:57:12,953 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:57:12] "GET /video_feed HTTP/1.1" 200 -
+2025-08-04 17:57:12,962 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:57:12] "GET /socket.io/?EIO=4&transport=polling&t=PXr3DZ0 HTTP/1.1" 200 -
+2025-08-04 17:57:12,965 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:57:12] "[36mGET /static/css/light.css HTTP/1.1[0m" 304 -
+2025-08-04 17:57:12,974 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:57:12] "GET /api/hourly_summary?days=1 HTTP/1.1" 200 -
+2025-08-04 17:57:12,975 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:57:12] "GET /api/vehicle_details HTTP/1.1" 200 -
+2025-08-04 17:57:12,977 - web.dashboard - INFO - Client connected
+2025-08-04 17:57:12,978 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:57:12] "POST /socket.io/?EIO=4&transport=polling&t=PXr3DZG&sid=QqqtC9l864-hJ_E3AAAC HTTP/1.1" 200 -
+2025-08-04 17:57:12,978 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:57:12] "GET /socket.io/?EIO=4&transport=polling&t=PXr3DZH&sid=QqqtC9l864-hJ_E3AAAC HTTP/1.1" 200 -
+2025-08-04 17:57:12,981 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:57:12] "GET /socket.io/?EIO=4&transport=polling&t=PXr3DZK&sid=QqqtC9l864-hJ_E3AAAC HTTP/1.1" 200 -
+2025-08-04 17:57:15,555 - core.working_tracker - INFO - Loading YOLO model
+2025-08-04 17:57:15,591 - core.working_tracker - INFO - YOLO model loaded successfully
+2025-08-04 17:57:15,592 - core.working_tracker - INFO - Loading TinyLLaVA detector
+2025-08-04 17:57:17,499 - core.working_tracker - INFO - Loading YOLO model
+2025-08-04 17:57:17,538 - core.working_tracker - INFO - YOLO model loaded successfully
+2025-08-04 17:57:17,538 - core.working_tracker - INFO - Loading TinyLLaVA detector
+2025-08-04 17:57:18,919 - license_plate.tinyllava_reader - WARNING - TinyLLaVA not available: bczhou/tiny-llava-v1_5-1.1b is not a local folder and is not a valid model identifier listed on 'https://huggingface.co/models'
+If this is a private repository, make sure to pass a token having permission to this repo either by logging in with `hf auth login` or by passing `token=<your_token>`
+2025-08-04 17:57:18,919 - core.working_tracker - INFO - TinyLLaVA detector loaded (150MB)
+2025-08-04 17:57:18,919 - web.dashboard - INFO - Started monitoring with source: 0, confidence: 0.5
+2025-08-04 17:57:18,920 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:57:18] "POST /start_monitoring HTTP/1.1" 200 -
+2025-08-04 17:57:19,062 - web.dashboard - INFO - 🎬 Opening camera for monitoring...
+2025-08-04 17:57:19,062 - web.dashboard - INFO - 🔍 Trying camera index 0...
+2025-08-04 17:57:19,976 - web.dashboard - INFO - ✅ Camera 0 opened successfully
+2025-08-04 17:57:20,125 - license_plate.tinyllava_reader - WARNING - TinyLLaVA not available: bczhou/tiny-llava-v1_5-1.1b is not a local folder and is not a valid model identifier listed on 'https://huggingface.co/models'
+If this is a private repository, make sure to pass a token having permission to this repo either by logging in with `hf auth login` or by passing `token=<your_token>`
+2025-08-04 17:57:20,125 - core.working_tracker - INFO - TinyLLaVA detector loaded (150MB)
+2025-08-04 17:57:20,127 - web.dashboard - INFO - Started monitoring with source: 0, confidence: 0.5
+2025-08-04 17:57:20,127 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:57:20] "POST /start_monitoring HTTP/1.1" 200 -
+2025-08-04 17:57:22,977 - core.working_tracker - INFO - Processing 0 recent plates for vehicle details
+2025-08-04 17:57:22,978 - core.working_tracker - INFO - Created 1 vehicle detail entries
+2025-08-04 17:57:22,978 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:57:22] "GET /api/vehicle_details HTTP/1.1" 200 -
+2025-08-04 17:57:27,976 - core.working_tracker - INFO - Processing 0 recent plates for vehicle details
+2025-08-04 17:57:27,977 - core.working_tracker - INFO - Created 1 vehicle detail entries
+2025-08-04 17:57:27,977 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:57:27] "GET /api/vehicle_details HTTP/1.1" 200 -
+2025-08-04 17:57:32,977 - core.working_tracker - INFO - Processing 0 recent plates for vehicle details
+2025-08-04 17:57:32,978 - core.working_tracker - INFO - Created 1 vehicle detail entries
+2025-08-04 17:57:32,978 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:57:32] "GET /api/vehicle_details HTTP/1.1" 200 -
+2025-08-04 17:57:37,977 - core.working_tracker - INFO - Processing 0 recent plates for vehicle details
+2025-08-04 17:57:37,977 - core.working_tracker - INFO - Created 1 vehicle detail entries
+2025-08-04 17:57:37,978 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:57:37] "GET /api/vehicle_details HTTP/1.1" 200 -
+2025-08-04 17:57:42,976 - core.working_tracker - INFO - Processing 0 recent plates for vehicle details
+2025-08-04 17:57:42,976 - core.working_tracker - INFO - Created 1 vehicle detail entries
+2025-08-04 17:57:42,976 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:57:42] "GET /api/vehicle_details HTTP/1.1" 200 -
+2025-08-04 17:57:47,978 - core.working_tracker - INFO - Processing 0 recent plates for vehicle details
+2025-08-04 17:57:47,978 - core.working_tracker - INFO - Created 1 vehicle detail entries
+2025-08-04 17:57:47,978 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:57:47] "GET /api/vehicle_details HTTP/1.1" 200 -
+2025-08-04 17:57:52,130 - license_plate.tiny_detector - INFO - 🎯 TinyLLaVA plate: 7ERT (method: tesseract)
+2025-08-04 17:57:52,130 - core.working_tracker - INFO - License plate detected: 7ERT for car
+2025-08-04 17:57:52,977 - core.working_tracker - INFO - Processing 1 recent plates for vehicle details
+2025-08-04 17:57:52,977 - core.working_tracker - INFO - Created 1 vehicle detail entries
+2025-08-04 17:57:52,977 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:57:52] "GET /api/vehicle_details HTTP/1.1" 200 -
+2025-08-04 17:57:56,550 - license_plate.tiny_detector - INFO - 🎯 TinyLLaVA plate: KA5M0E (method: easyocr)
+2025-08-04 17:57:56,551 - core.working_tracker - INFO - License plate detected: KA5M0E for bus
+2025-08-04 17:57:57,645 - license_plate.tiny_detector - INFO - 🎯 TinyLLaVA plate: TE1 (method: tesseract)
+2025-08-04 17:57:57,645 - core.working_tracker - INFO - License plate detected: TE1 for bus
+2025-08-04 17:57:57,977 - core.working_tracker - INFO - Processing 3 recent plates for vehicle details
+2025-08-04 17:57:57,977 - core.working_tracker - INFO - Created 3 vehicle detail entries
+2025-08-04 17:57:57,978 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:57:57] "GET /api/vehicle_details HTTP/1.1" 200 -
+2025-08-04 17:57:58,528 - license_plate.tiny_detector - INFO - 🎯 TinyLLaVA plate: LL7 (method: pattern_0mb)
+2025-08-04 17:57:58,528 - core.working_tracker - INFO - License plate detected: LL7 for bus
+2025-08-04 17:58:02,976 - core.working_tracker - INFO - Processing 4 recent plates for vehicle details
+2025-08-04 17:58:02,976 - core.working_tracker - INFO - Created 4 vehicle detail entries
+2025-08-04 17:58:02,977 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:58:02] "GET /api/vehicle_details HTTP/1.1" 200 -
+2025-08-04 17:58:03,463 - license_plate.tiny_detector - INFO - 🎯 TinyLLaVA plate: SEP5 (method: tesseract)
+2025-08-04 17:58:03,463 - core.working_tracker - INFO - License plate detected: SEP5 for bus
+2025-08-04 17:58:04,028 - license_plate.tiny_detector - INFO - 🎯 TinyLLaVA plate: AA6 (method: tesseract)
+2025-08-04 17:58:04,028 - core.working_tracker - INFO - License plate detected: AA6 for bus
+2025-08-04 17:58:04,832 - license_plate.tiny_detector - INFO - 🎯 TinyLLaVA plate: YE2 (method: tesseract)
+2025-08-04 17:58:04,833 - core.working_tracker - INFO - License plate detected: YE2 for bus
+2025-08-04 17:58:05,511 - license_plate.tiny_detector - INFO - 🎯 TinyLLaVA plate: SA55 (method: tesseract)
+2025-08-04 17:58:05,511 - core.working_tracker - INFO - License plate detected: SA55 for bus
+2025-08-04 17:58:06,289 - license_plate.tiny_detector - INFO - 🎯 TinyLLaVA plate: 55T (method: tesseract)
+2025-08-04 17:58:06,289 - core.working_tracker - INFO - License plate detected: 55T for bus
+2025-08-04 17:58:07,977 - core.working_tracker - INFO - Processing 9 recent plates for vehicle details
+2025-08-04 17:58:07,978 - core.working_tracker - INFO - Created 9 vehicle detail entries
+2025-08-04 17:58:07,978 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:58:07] "GET /api/vehicle_details HTTP/1.1" 200 -
+2025-08-04 17:58:08,862 - license_plate.tiny_detector - INFO - 🎯 TinyLLaVA plate: KASA08T (method: tesseract)
+2025-08-04 17:58:08,862 - core.working_tracker - INFO - License plate detected: KASA08T for bus
+2025-08-04 17:58:12,039 - license_plate.tiny_detector - INFO - 🎯 TinyLLaVA plate: AS10816 (method: tesseract)
+2025-08-04 17:58:12,039 - core.working_tracker - INFO - License plate detected: AS10816 for bus
+2025-08-04 17:58:12,975 - core.working_tracker - INFO - Processing 11 recent plates for vehicle details
+2025-08-04 17:58:12,976 - core.working_tracker - INFO - Created 11 vehicle detail entries
+2025-08-04 17:58:12,976 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:58:12] "GET /api/vehicle_details HTTP/1.1" 200 -
+2025-08-04 17:58:13,587 - license_plate.tiny_detector - INFO - 🎯 TinyLLaVA plate: 018LL (method: pattern_0mb)
+2025-08-04 17:58:13,587 - core.working_tracker - INFO - License plate detected: 018LL for bus
+2025-08-04 17:58:15,513 - license_plate.tiny_detector - INFO - 🎯 TinyLLaVA plate: 10D8116 (method: easyocr)
+2025-08-04 17:58:15,514 - core.working_tracker - INFO - License plate detected: 10D8116 for bus
+2025-08-04 17:58:16,249 - license_plate.tiny_detector - INFO - 🎯 TinyLLaVA plate: Q1N1 (method: easyocr)
+2025-08-04 17:58:16,249 - core.working_tracker - INFO - License plate detected: Q1N1 for bus
+2025-08-04 17:58:17,976 - core.working_tracker - INFO - Processing 14 recent plates for vehicle details
+2025-08-04 17:58:17,976 - core.working_tracker - INFO - Created 14 vehicle detail entries
+2025-08-04 17:58:17,976 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:58:17] "GET /api/vehicle_details HTTP/1.1" 200 -
+2025-08-04 17:58:22,976 - core.working_tracker - INFO - Processing 14 recent plates for vehicle details
+2025-08-04 17:58:22,976 - core.working_tracker - INFO - Created 14 vehicle detail entries
+2025-08-04 17:58:22,976 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:58:22] "GET /api/vehicle_details HTTP/1.1" 200 -
+2025-08-04 17:58:27,977 - core.working_tracker - INFO - Processing 14 recent plates for vehicle details
+2025-08-04 17:58:27,977 - core.working_tracker - INFO - Created 14 vehicle detail entries
+2025-08-04 17:58:27,977 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:58:27] "GET /api/vehicle_details HTTP/1.1" 200 -
+2025-08-04 17:58:32,974 - core.working_tracker - INFO - Processing 14 recent plates for vehicle details
+2025-08-04 17:58:32,974 - core.working_tracker - INFO - Created 14 vehicle detail entries
+2025-08-04 17:58:32,974 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:58:32] "GET /api/vehicle_details HTTP/1.1" 200 -
+2025-08-04 17:58:37,969 - core.working_tracker - INFO - Processing 14 recent plates for vehicle details
+2025-08-04 17:58:37,969 - core.working_tracker - INFO - Created 14 vehicle detail entries
+2025-08-04 17:58:37,969 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:58:37] "GET /api/vehicle_details HTTP/1.1" 200 -
+2025-08-04 17:58:42,966 - core.working_tracker - INFO - Processing 14 recent plates for vehicle details
+2025-08-04 17:58:42,967 - core.working_tracker - INFO - Created 14 vehicle detail entries
+2025-08-04 17:58:42,967 - werkzeug - INFO - 127.0.0.1 - - [04/Aug/2025 17:58:42] "GET /api/vehicle_details HTTP/1.1" 200 -

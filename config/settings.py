@@ -45,6 +45,13 @@ class CameraConfig:
             self.CAMERA_INDICES = [0, 1, 2]
 
 @dataclass
+class LLMConfig:
+    """Micro LLM configuration"""
+    ENABLED: bool = True
+    MODEL_TYPE: str = "pattern"  # "tinyllava" (150MB), "mobilevlm" (300MB), "pattern" (0MB)
+    CONFIDENCE_THRESHOLD: float = 0.6
+
+@dataclass
 class UIConfig:
     """UI configuration"""
     COLORS: Dict[str, tuple] = None
@@ -62,4 +69,5 @@ class UIConfig:
 app_config = AppConfig()
 model_config = ModelConfig()
 camera_config = CameraConfig()
+llm_config = LLMConfig()
 ui_config = UIConfig()
