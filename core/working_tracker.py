@@ -25,6 +25,7 @@ except ImportError as e:
         logging.warning("No plate detection available")
 
 from config.settings import model_config, ui_config, llm_config
+from database.manager import DatabaseManager
 
 logger = logging.getLogger(__name__)
 
@@ -42,11 +43,15 @@ class WorkingVehicleTracker:
         self.plate_detector = None
         self.license_plate_detections = deque(maxlen=50)  # Use deque for better performance
         self.frame_count = 0
+        self.db_manager = DatabaseManager()
         
         # Vehicle tracking with recent plates cache
         self.tracked_vehicles = {}
         self.vehicle_plates_cache = {}  # Cache recent plates per vehicle
         self.next_vehicle_id = 1
+        
+        # Volkswagen Group brands
+        self.vw_brands = ['skoda', 'audi', 'porsche', 'lamborghini', 'bentley', 'volkswagen', 'vw']
         
         # Initialize components
         self._initialize_components()
@@ -215,12 +220,98 @@ class WorkingVehicleTracker:
                             plate_result['vehicle_type'] = vehicle_type
                             self.license_plate_detections.append(plate_result)
                             logger.info(f"License plate detected: {plate_text} for {vehicle_type}")
+                            
+                            # Check if it's an employee vehicle
+                            is_employee = self.db_manager.is_employee_vehicle(plate_text)
+                            
+                            # Get vehicle color and brand
+                            vehicle_color = self._detect_vehicle_color(frame, bbox)
+                            vehicle_brand = self._detect_vehicle_brand(frame, bbox)
+                            
+                            # Log entry (simplified for demo - in real implementation, 
+                            # you would determine entry/exit based on camera position)
+                            self.db_manager.log_vehicle_entry(
+                                plate_text, 
+                                vehicle_color, 
+                                vehicle_brand, 
+                                is_employee, 
+                                True  # Assuming entry camera for this demo
+                            )
                 
                 # Draw license plate detections
                 self.plate_detector.draw_plate_detections(processed_frame, plate_results)
                 
         except Exception as e:
             logger.error(f"Error in license plate detection: {e}")
+    
+    def _detect_vehicle_color(self, frame: np.ndarray, bbox: Tuple) -> str:
+        """Detect vehicle color using HSV color space"""
+        try:
+            x1, y1, x2, y2 = bbox
+            # Crop vehicle region with some margin
+            margin = 10
+            x1, y1 = max(0, x1 - margin), max(0, y1 - margin)
+            x2, y2 = min(frame.shape[1], x2 + margin), min(frame.shape[0], y2 + margin)
+            
+            vehicle_roi = frame[y1:y2, x1:x2]
+            
+            # Convert to HSV for better color detection
+            hsv = cv2.cvtColor(vehicle_roi, cv2.COLOR_BGR2HSV)
+            
+            # Define color ranges in HSV
+            color_ranges = {
+                'red': ([0, 50, 50], [10, 255, 255]),
+                'red2': ([170, 50, 50], [180, 255, 255]),  # Red wraps around in HSV
+                'green': ([40, 50, 50], [80, 255, 255]),
+                'blue': ([100, 50, 50], [130, 255, 255]),
+                'yellow': ([20, 50, 50], [30, 255, 255]),
+                'orange': ([10, 50, 50], [20, 255, 255]),
+                'purple': ([130, 50, 50], [160, 255, 255]),
+                'white': ([0, 0, 200], [180, 30, 255]),
+                'black': ([0, 0, 0], [180, 255, 30])
+            }
+            
+            # Find dominant color
+            max_pixels = 0
+            dominant_color = 'unknown'
+            
+            for color_name, (lower, upper) in color_ranges.items():
+                # Handle special case for red (wraps around)
+                if color_name == 'red2':
+                    continue
+                    
+                lower_np = np.array(lower, dtype=np.uint8)
+                upper_np = np.array(upper, dtype=np.uint8)
+                
+                mask = cv2.inRange(hsv, lower_np, upper_np)
+                
+                # For red, also check the second range
+                if color_name == 'red':
+                    lower_red2 = np.array(color_ranges['red2'][0], dtype=np.uint8)
+                    upper_red2 = np.array(color_ranges['red2'][1], dtype=np.uint8)
+                    mask2 = cv2.inRange(hsv, lower_red2, upper_red2)
+                    mask = cv2.bitwise_or(mask, mask2)
+                
+                pixel_count = cv2.countNonZero(mask)
+                
+                if pixel_count > max_pixels:
+                    max_pixels = pixel_count
+                    dominant_color = color_name if color_name != 'red2' else 'red'
+            
+            return dominant_color
+        except Exception as e:
+            logger.error(f"Error detecting vehicle color: {e}")
+            return 'unknown'
+    
+    def _detect_vehicle_brand(self, frame: np.ndarray, bbox: Tuple) -> str:
+        """Detect vehicle brand (simplified - in real implementation would use a model)"""
+        try:
+            # In a real implementation, this would use a brand recognition model
+            # For now, we'll return a placeholder
+            return 'unknown'
+        except Exception as e:
+            logger.error(f"Error detecting vehicle brand: {e}")
+            return 'unknown'
     
     def _demo_detection(self, frame: np.ndarray) -> Tuple[np.ndarray, Dict]:
         """Fallback demo detection when YOLO is not available"""

@@ -176,6 +176,16 @@
             box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
         }
         
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+            color: white;
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+            color: white;
+        }
+        
         .charts-section {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -221,6 +231,41 @@
             text-align: center;
         }
         
+        .employee-section {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            margin-top: 20px;
+        }
+        
+        .employee-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .employee-form-full {
+            grid-column: span 2;
+        }
+        
+        .employee-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .employee-table th, .employee-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .employee-table th {
+            background-color: #f2f2f2;
+        }
+        
         @media (max-width: 1200px) {
             .dashboard-grid {
                 grid-template-columns: 1fr;
@@ -228,6 +273,14 @@
             
             .charts-section {
                 grid-template-columns: 1fr;
+            }
+            
+            .employee-form {
+                grid-template-columns: 1fr;
+            }
+            
+            .employee-form-full {
+                grid-column: span 1;
             }
         }
     </style>
@@ -329,6 +382,59 @@
             <div class="chart-panel">
                 <h3>Vehicle Type Distribution</h3>
                 <canvas id="typeChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="employee-section">
+            <h3>Employee Vehicle Management</h3>
+            <div class="employee-form">
+                <div class="control-group">
+                    <label>Plate Number:</label>
+                    <input type="text" id="plateNumber" placeholder="e.g., KA01AB1234">
+                </div>
+                <div class="control-group">
+                    <label>Employee Name:</label>
+                    <input type="text" id="employeeName" placeholder="e.g., John Doe">
+                </div>
+                <div class="control-group">
+                    <label>Vehicle Brand:</label>
+                    <select id="vehicleBrand">
+                        <option value="skoda">Skoda</option>
+                        <option value="audi">Audi</option>
+                        <option value="porsche">Porsche</option>
+                        <option value="lamborghini">Lamborghini</option>
+                        <option value="bentley">Bentley</option>
+                        <option value="volkswagen">Volkswagen</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>Department:</label>
+                    <input type="text" id="department" placeholder="e.g., Service">
+                </div>
+                <div class="control-group employee-form-full">
+                    <button class="btn btn-success" onclick="addEmployeeVehicle()">Add Employee Vehicle</button>
+                </div>
+            </div>
+            
+            <div>
+                <h4>Registered Employee Vehicles</h4>
+                <table class="employee-table">
+                    <thead>
+                        <tr>
+                            <th>Plate Number</th>
+                            <th>Employee Name</th>
+                            <th>Brand</th>
+                            <th>Department</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employeeTableBody">
+                        <tr>
+                            <td colspan="5" style="text-align: center;">No employee vehicles registered</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
         
@@ -512,6 +618,104 @@
             window.open('/api/export_data', '_blank');
         }
         
+        // Employee Management Functions
+        function addEmployeeVehicle() {
+            const plateNumber = document.getElementById('plateNumber').value.trim();
+            const employeeName = document.getElementById('employeeName').value.trim();
+            const vehicleBrand = document.getElementById('vehicleBrand').value;
+            const department = document.getElementById('department').value.trim();
+            
+            if (!plateNumber || !employeeName || !department) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            fetch('/api/employees', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    plate_number: plateNumber,
+                    employee_name: employeeName,
+                    brand: vehicleBrand,
+                    department: department
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('Employee vehicle added successfully!');
+                    // Clear form
+                    document.getElementById('plateNumber').value = '';
+                    document.getElementById('employeeName').value = '';
+                    document.getElementById('vehicleBrand').value = 'skoda';
+                    document.getElementById('department').value = '';
+                    // Refresh employee list
+                    loadEmployeeVehicles();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to add employee vehicle');
+            });
+        }
+        
+        function removeEmployeeVehicle(plateNumber) {
+            if (!confirm('Are you sure you want to remove this employee vehicle?')) {
+                return;
+            }
+            
+            fetch(`/api/employees/${plateNumber}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('Employee vehicle removed successfully!');
+                    loadEmployeeVehicles();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to remove employee vehicle');
+            });
+        }
+        
+        function loadEmployeeVehicles() {
+            fetch('/api/employees')
+            .then(response => response.json())
+            .then(data => {
+                const tableBody = document.getElementById('employeeTableBody');
+                if (data.status === 'success' && data.data.length > 0) {
+                    tableBody.innerHTML = data.data.map(employee => `
+                        <tr>
+                            <td>${employee.plate_number}</td>
+                            <td>${employee.employee_name}</td>
+                            <td>${employee.brand}</td>
+                            <td>${employee.department}</td>
+                            <td>
+                                <button class="btn btn-danger" onclick="removeEmployeeVehicle('${employee.plate_number}')" style="padding: 5px 10px; font-size: 12px;">
+                                    Remove
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No employee vehicles registered</td></tr>';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading employee vehicles:', error);
+                const tableBody = document.getElementById('employeeTableBody');
+                tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Error loading employee vehicles</td></tr>';
+            });
+        }
+        
         // Load historical data for charts
         function loadHistoricalData() {
             fetch('/api/hourly_summary?days=1')
@@ -615,6 +819,7 @@
             initCharts();
             loadHistoricalData();
             loadVehicleDetails();
+            loadEmployeeVehicles(); // Load employee vehicles
             
             // Refresh data every 5 seconds when monitoring
             setInterval(() => {

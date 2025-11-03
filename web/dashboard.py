@@ -21,6 +21,7 @@ from core.working_tracker import WorkingVehicleTracker
 from database.manager import DatabaseManager
 from utils.system_monitor import system_monitor
 from utils.anomaly_detector import anomaly_detector
+from employee_manager import EmployeeManager
 
 logger = logging.getLogger(__name__)
 
@@ -50,8 +51,9 @@ class VehicleDashboard:
         # Initialize SocketIO
         self.socketio = SocketIO(self.app, cors_allowed_origins="*")
         
-        # Initialize database
+        # Initialize database and employee manager
         self.db = DatabaseManager()
+        self.emp_manager = EmployeeManager()
         
         # Application state
         self.vehicle_counter = None
@@ -190,6 +192,65 @@ class VehicleDashboard:
         def video_feed():
             return Response(self._generate_frames(),
                           mimetype='multipart/x-mixed-replace; boundary=frame')
+        
+        # Employee Management API Endpoints
+        @self.app.route('/api/employees', methods=['GET'])
+        def get_employees():
+            """Get all employee vehicles"""
+            try:
+                employees = self.emp_manager.get_employee_vehicles()
+                return jsonify({'status': 'success', 'data': employees})
+            except Exception as e:
+                return jsonify({'status': 'error', 'message': str(e)}), 500
+        
+        @self.app.route('/api/employees', methods=['POST'])
+        def add_employee():
+            """Add a new employee vehicle"""
+            try:
+                data = request.get_json()
+                required_fields = ['plate_number', 'employee_name', 'brand', 'department']
+                
+                # Validate required fields
+                for field in required_fields:
+                    if field not in data:
+                        return jsonify({'status': 'error', 'message': f'Missing required field: {field}'}), 400
+                
+                # Add employee vehicle
+                success = self.emp_manager.add_employee_vehicle(
+                    data['plate_number'],
+                    data['employee_name'],
+                    data['brand'],
+                    data['department']
+                )
+                
+                if success:
+                    return jsonify({'status': 'success', 'message': 'Employee vehicle added successfully'})
+                else:
+                    return jsonify({'status': 'error', 'message': 'Failed to add employee vehicle'}), 500
+                    
+            except Exception as e:
+                return jsonify({'status': 'error', 'message': str(e)}), 500
+        
+        @self.app.route('/api/employees/<plate_number>', methods=['DELETE'])
+        def remove_employee(plate_number):
+            """Remove an employee vehicle"""
+            try:
+                success = self.emp_manager.remove_employee_vehicle(plate_number)
+                if success:
+                    return jsonify({'status': 'success', 'message': 'Employee vehicle removed successfully'})
+                else:
+                    return jsonify({'status': 'error', 'message': 'Failed to remove employee vehicle'}), 500
+            except Exception as e:
+                return jsonify({'status': 'error', 'message': str(e)}), 500
+        
+        @self.app.route('/api/employees/check/<plate_number>', methods=['GET'])
+        def check_employee(plate_number):
+            """Check if a vehicle belongs to an employee"""
+            try:
+                is_employee = self.emp_manager.is_employee_vehicle(plate_number)
+                return jsonify({'status': 'success', 'is_employee': is_employee, 'plate_number': plate_number})
+            except Exception as e:
+                return jsonify({'status': 'error', 'message': str(e)}), 500
     
     def _setup_socket_events(self):
         """Setup SocketIO events"""

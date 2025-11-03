@@ -17,8 +17,8 @@ class AppConfig:
 class ModelConfig:
     """Model configuration"""
     CONFIDENCE_THRESHOLD: float = 0.5
-    YOLO_MODEL_PATH: str = 'yolov8n.pt'
-    LICENSE_PLATE_MODEL_PATH: str = 'yolov8_license_plate2 (1).pt'
+    YOLO_MODEL_PATH: str = './yolov8n.pt'  # Use local model
+    LICENSE_PLATE_MODEL_PATH: str = './yolov8_license_plate2 (1).pt'  # Use local model
     
     # Vehicle class mapping (COCO dataset)
     VEHICLE_CLASSES: Dict[int, str] = None
