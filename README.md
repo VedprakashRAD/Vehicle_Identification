@@ -1,118 +1,70 @@
-# Vehicle Identification System
+# 🚗 Unified Vehicle Identification System
 
-A real-time AI-powered vehicle detection and license plate recognition system with web dashboard.
+A comprehensive vehicle identification system with real-time detection capabilities for cars, motorcycles, buses, and trucks.
 
-## Features
+## 🚀 Quick Start
 
-- **Real-time Vehicle Detection**: Uses YOLOv8 for detecting cars, motorcycles, buses, and trucks
-- **License Plate Recognition**: Advanced OCR with multiple engines (EasyOCR, Tesseract)
-- **Web Dashboard**: Real-time monitoring with statistics and live video feed
-- **Vehicle Tracking**: Assigns unique IDs to vehicles and tracks their movement
-- **Modular Architecture**: Clean, maintainable code structure
+### 1. Install Dependencies
 
-## Project Structure
-
-```
-Vehicle_Identification_/
-├── config/                 # Configuration settings
-├── core/                   # Core detection and tracking logic
-├── database/              # Database management
-├── license_plate/         # License plate detection modules
-├── static/               # Web assets (CSS, JS)
-├── templates/            # HTML templates
-├── tests/                # Unit tests
-├── utils/                # Utility modules
-├── web/                  # Web dashboard
-├── app.py               # Main application entry point
-├── quick_test.py        # Quick testing script
-└── requirements.txt     # Python dependencies
-```
-
-## Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd Vehicle_Identification_
-   ```
-
-2. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Download YOLO models** (if not present)
-   - YOLOv8n model will be downloaded automatically
-   - For license plate detection, ensure `yolov8_license_plate2 (1).pt` is in the root directory
-
-## Usage
-
-### Web Dashboard
 ```bash
-python app.py
+pip install -r requirements.txt
 ```
-Access the dashboard at `http://localhost:9002`
 
-### Quick Test
+### 2. Run the System
+
+The system can be run in three different modes:
+
+#### Web Dashboard Mode (Default)
 ```bash
-python quick_test.py
+python main.py --mode web
 ```
+Access the dashboard at: `http://localhost:9090`
 
-### Running Tests
+#### Mobile Mode
 ```bash
-python -m pytest tests/
+python main.py --mode mobile
 ```
 
-## Configuration
+#### Standalone Mode
+```bash
+python main.py --mode standalone
+```
 
-Edit `config/settings.py` to customize:
-- Camera settings
-- Model parameters
-- UI colors
-- Detection thresholds
+### 3. Advanced Usage
+```bash
+# Web Dashboard with custom host/port
+python main.py --mode web --host 127.0.0.1 --port 8080
 
-## Environment Variables
+# Mobile Mode with specific camera
+python main.py --mode mobile --camera 1
 
-- `SECRET_KEY`: Flask secret key for production
+# Standalone Mode with video file
+python main.py --mode standalone --source test_video.mp4
+```
 
-## Features in Detail
+## 🎯 Features
 
-### Vehicle Detection
-- Supports multiple vehicle types: cars, motorcycles, buses, trucks
-- Real-time tracking with unique vehicle IDs
-- Confidence threshold filtering
+- **Real-time Vehicle Detection**: Detects cars, motorcycles, buses, and trucks
+- **License Plate Recognition**: Extracts license plate information
+- **Employee Vehicle Management**: Tracks employee vehicles separately
+- **Multi-mode Operation**: Web dashboard, mobile app, or standalone
+- **Database Integration**: Stores detection history and employee data
+- **Volkswagen Group Brand Recognition**: Specifically recognizes Skoda, Audi, Porsche, Lamborghini, and Bentley
 
-### License Plate Recognition
-- Multiple OCR engines for better accuracy
-- Advanced image preprocessing
-- Pattern validation for different regions
+## 🛠️ Requirements
 
-### Web Dashboard
-- Live video feed with overlays
-- Real-time statistics
-- Vehicle entry/exit logging
-- Export functionality
+- Python 3.7+
+- OpenCV
+- PyTorch
+- Ultralytics YOLOv8
+- EasyOCR
+- Flask (for web dashboard)
 
-## Performance Optimization
+## 📱 Controls
 
-- Uses deque for efficient data structures
-- Caches recent license plates per vehicle
-- Modular processing pipeline
-- Configurable frame processing limits
+- Press 'q' to quit in mobile and standalone modes
+- Use web interface controls for the dashboard mode
 
-## Troubleshooting
+## 📄 License
 
-1. **No camera detected**: Check camera permissions and connections
-2. **YOLO model not found**: Ensure model files are in the correct directory
-3. **OCR not working**: Install Tesseract system package if using pytesseract
-
-## Contributing
-
-1. Follow the existing code structure
-2. Add tests for new features
-3. Update documentation
-4. Use proper logging instead of print statements
-
-## License
-
-[Add your license information here]
+This project is licensed under the MIT License.

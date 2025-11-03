@@ -1,0 +1,289 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workshop Vehicle Identification System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1rem; text-align: center; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; }
+        .card { background: white; border-radius: 10px; padding: 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .video-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem; }
+        .video-container { position: relative; background: #000; border-radius: 10px; overflow: hidden; }
+        .video-stream { width: 100%; height: 300px; object-fit: cover; }
+        .video-label { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7); color: white; padding: 5px 10px; border-radius: 5px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .stat-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem; border-radius: 10px; text-align: center; }
+        .stat-number { font-size: 2rem; font-weight: bold; margin-bottom: 0.5rem; }
+        .stat-label { font-size: 0.9rem; opacity: 0.9; }
+        .controls { display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
+        .btn { padding: 0.75rem 1.5rem; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; transition: all 0.3s; }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-danger { background: #e74c3c; color: white; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        .detection-list { max-height: 400px; overflow-y: auto; }
+        .detection-item { padding: 1rem; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .detection-item:last-child { border-bottom: none; }
+        .employee-badge { background: #27ae60; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; }
+        .customer-badge { background: #3498db; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; }
+        .status-indicator { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; }
+        .status-active { background: #27ae60; }
+        .status-inactive { background: #e74c3c; }
+        select, input { padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px; margin-right: 0.5rem; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚗 Workshop Vehicle Identification System</h1>
+        <p>VW Group Vehicle Tracking with Employee Filtering</p>
+    </div>
+
+    <div class="container">
+        <!-- Control Panel -->
+        <div class="controls">
+            <select id="entrySource">
+                <option value="0">Entry Camera (0)</option>
+                <option value="1">Entry Camera (1)</option>
+                <option value="test_video.mp4">Test Video</option>
+            </select>
+            <select id="exitSource">
+                <option value="1">Exit Camera (1)</option>
+                <option value="0">Exit Camera (0)</option>
+                <option value="vehicle_test_video.mp4">Test Video</option>
+            </select>
+            <button class="btn btn-primary" onclick="startMonitoring()">Start Monitoring</button>
+            <button class="btn btn-danger" onclick="stopMonitoring()">Stop Monitoring</button>
+            <span id="statusIndicator">
+                <span class="status-indicator status-inactive"></span>
+                <span id="statusText">Stopped</span>
+            </span>
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="dailyCustomers">0</div>
+                <div class="stat-label">Daily Customers</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="dailyEmployees">0</div>
+                <div class="stat-label">Daily Employees</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalEmployees">0</div>
+                <div class="stat-label">Total Employees</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="vwBrands">6</div>
+                <div class="stat-label">VW Brands Supported</div>
+            </div>
+        </div>
+
+        <!-- Video Feeds -->
+        <div class="video-grid">
+            <div class="video-container">
+                <img class="video-stream" id="entryFeed" src="/static/placeholder.jpg" alt="Entry Camera">
+                <div class="video-label">ENTRY CAMERA</div>
+            </div>
+            <div class="video-container">
+                <img class="video-stream" id="exitFeed" src="/static/placeholder.jpg" alt="Exit Camera">
+                <div class="video-label">EXIT CAMERA</div>
+            </div>
+        </div>
+
+        <!-- Recent Detections -->
+        <div class="grid">
+            <div class="card">
+                <h3>Recent Customer Vehicles</h3>
+                <div class="detection-list" id="customerDetections">
+                    <div class="detection-item">No recent detections</div>
+                </div>
+            </div>
+            <div class="card">
+                <h3>Employee Visits</h3>
+                <div class="detection-list" id="employeeDetections">
+                    <div class="detection-item">No recent visits</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Employee Management -->
+        <div class="card">
+            <h3>Add Employee Vehicle</h3>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1rem;">
+                <input type="text" id="employeePlate" placeholder="Plate Number (e.g., KA01AB1234)">
+                <input type="text" id="employeeName" placeholder="Employee Name">
+                <select id="employeeBrand">
+                    <option value="Skoda">Skoda</option>
+                    <option value="Audi">Audi</option>
+                    <option value="Porsche">Porsche</option>
+                    <option value="Lamborghini">Lamborghini</option>
+                    <option value="Bentley">Bentley</option>
+                    <option value="Volkswagen">Volkswagen</option>
+                </select>
+                <input type="text" id="employeeDept" placeholder="Department">
+                <button class="btn btn-primary" onclick="addEmployee()">Add Employee</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let monitoringActive = false;
+
+        function startMonitoring() {
+            const entrySource = document.getElementById('entrySource').value;
+            const exitSource = document.getElementById('exitSource').value;
+            
+            fetch('/api/start_monitoring', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({entry_source: entrySource, exit_source: exitSource})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    monitoringActive = true;
+                    updateStatus(true);
+                    startVideoFeeds();
+                }
+            });
+        }
+
+        function stopMonitoring() {
+            fetch('/api/stop_monitoring', {method: 'POST'})
+            .then(response => response.json())
+            .then(data => {
+                monitoringActive = false;
+                updateStatus(false);
+                stopVideoFeeds();
+            });
+        }
+
+        function updateStatus(active) {
+            const indicator = document.querySelector('.status-indicator');
+            const text = document.getElementById('statusText');
+            
+            if (active) {
+                indicator.className = 'status-indicator status-active';
+                text.textContent = 'Monitoring Active';
+            } else {
+                indicator.className = 'status-indicator status-inactive';
+                text.textContent = 'Stopped';
+            }
+        }
+
+        function startVideoFeeds() {
+            document.getElementById('entryFeed').src = '/video_feed/entry?' + new Date().getTime();
+            document.getElementById('exitFeed').src = '/video_feed/exit?' + new Date().getTime();
+        }
+
+        function stopVideoFeeds() {
+            document.getElementById('entryFeed').src = '/static/placeholder.jpg';
+            document.getElementById('exitFeed').src = '/static/placeholder.jpg';
+        }
+
+        function addEmployee() {
+            const data = {
+                plate_number: document.getElementById('employeePlate').value,
+                employee_name: document.getElementById('employeeName').value,
+                brand: document.getElementById('employeeBrand').value,
+                department: document.getElementById('employeeDept').value
+            };
+            
+            fetch('/api/add_employee', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    alert('Employee added successfully!');
+                    // Clear form
+                    document.getElementById('employeePlate').value = '';
+                    document.getElementById('employeeName').value = '';
+                    document.getElementById('employeeDept').value = '';
+                }
+            });
+        }
+
+        function updateStats() {
+            fetch('/api/stats')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('dailyCustomers').textContent = data.daily_customers || 0;
+                document.getElementById('dailyEmployees').textContent = data.daily_employees || 0;
+                document.getElementById('totalEmployees').textContent = data.total_employees || 0;
+            });
+        }
+
+        function updateDetections() {
+            fetch('/api/recent_detections')
+            .then(response => response.json())
+            .then(data => {
+                updateCustomerDetections(data.customers);
+                updateEmployeeDetections(data.employees);
+            });
+        }
+
+        function updateCustomerDetections(customers) {
+            const container = document.getElementById('customerDetections');
+            if (customers.length === 0) {
+                container.innerHTML = '<div class="detection-item">No recent detections</div>';
+                return;
+            }
+            
+            container.innerHTML = customers.map(customer => `
+                <div class="detection-item">
+                    <div>
+                        <strong>${customer.plate}</strong>
+                        <span class="customer-badge">CUSTOMER</span>
+                        <br>
+                        <small>${customer.color} ${customer.brand} • ${customer.orientation}</small>
+                    </div>
+                    <div>
+                        <small>${new Date(customer.entry_time).toLocaleTimeString()}</small>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateEmployeeDetections(employees) {
+            const container = document.getElementById('employeeDetections');
+            if (employees.length === 0) {
+                container.innerHTML = '<div class="detection-item">No recent visits</div>';
+                return;
+            }
+            
+            container.innerHTML = employees.map(employee => `
+                <div class="detection-item">
+                    <div>
+                        <strong>${employee.plate}</strong>
+                        <span class="employee-badge">EMPLOYEE</span>
+                        <br>
+                        <small>${employee.employee_name} • Visit #${employee.visit_count}</small>
+                    </div>
+                    <div>
+                        <small>${new Date(employee.visit_time).toLocaleTimeString()}</small>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Update data every 5 seconds
+        setInterval(() => {
+            updateStats();
+            updateDetections();
+        }, 5000);
+
+        // Initial load
+        updateStats();
+        updateDetections();
+    </script>
+</body>
+</html>
+    
