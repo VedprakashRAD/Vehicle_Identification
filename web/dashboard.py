@@ -20,6 +20,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from core.working_tracker import WorkingVehicleTracker
 from database.manager import DatabaseManager
 from employee_manager import EmployeeManager
+from core.vehicle_pairing import VehiclePairingManager
 
 logger = logging.getLogger(__name__)
 
@@ -52,12 +53,14 @@ class VehicleDashboard:
         # Initialize database and employee manager
         self.db = DatabaseManager()
         self.emp_manager = EmployeeManager()
+        self.pairing_manager = VehiclePairingManager()
         
         # Application state for dual cameras
         self.vehicle_counter_entry = None
         self.vehicle_counter_exit = None
         self.is_processing = False
-        self.camera_sources = {'entry': 0, 'exit': 1}  # Default camera sources
+        # Updated camera sources to use camera 0 for entry and test video for exit
+        self.camera_sources = {'entry': 0, 'exit': 'vehicle_test_video.mp4'}  # Use test video for exit camera
         
         # Setup routes and events
         self._setup_routes()
@@ -79,7 +82,9 @@ class VehicleDashboard:
                 'active_tracks': 0,
                 'timestamp': datetime.now().isoformat(),
                 'entry_exit_log': [],
-                'license_plates': []
+                'license_plates': [],
+                'recent_entries': [],
+                'recent_exits': []
             }
             
             # Get stats from entry camera if available
@@ -109,6 +114,15 @@ class VehicleDashboard:
                 # Combine license plates
                 if 'license_plates' in exit_stats:
                     combined_stats['license_plates'].extend(exit_stats['license_plates'])
+            
+            # Get recent entries and exits from database
+            try:
+                recent_entries = self.db.get_recent_entries(20)
+                # Separate entries and exits
+                combined_stats['recent_entries'] = [entry for entry in recent_entries if entry.get('exit_time') is None]
+                combined_stats['recent_exits'] = [entry for entry in recent_entries if entry.get('exit_time') is not None]
+            except Exception as e:
+                logger.error(f"Error fetching recent entries/exits: {e}")
             
             return jsonify(combined_stats)
         
@@ -167,6 +181,25 @@ class VehicleDashboard:
             except Exception as e:
                 return jsonify({'status': 'error', 'message': str(e)}), 500
 
+        @self.app.route('/api/paired_events')
+        def get_paired_events():
+            """Get paired vehicle events"""
+            try:
+                limit = int(request.args.get('limit', 50))
+                events = self.pairing_manager.get_recent_events(limit)
+                return jsonify({'status': 'success', 'data': events})
+            except Exception as e:
+                return jsonify({'status': 'error', 'message': str(e)}), 500
+
+        @self.app.route('/api/anomalies')
+        def get_anomalies():
+            """Get vehicle anomalies"""
+            try:
+                anomalies = self.pairing_manager.check_for_anomalies()
+                return jsonify({'status': 'success', 'data': anomalies})
+            except Exception as e:
+                return jsonify({'status': 'error', 'message': str(e)}), 500
+
         @self.app.route('/api/entry_exit_log')
         def get_entry_exit_log():
             # Combine logs from both cameras
@@ -179,19 +212,57 @@ class VehicleDashboard:
         
         @self.app.route('/api/vehicle_details')
         def get_vehicle_details():
-            # Combine vehicle details from both cameras
-            combined_details = []
-            
-            if self.vehicle_counter_entry:
-                entry_details = self.vehicle_counter_entry.get_vehicle_details()
-                combined_details.extend(entry_details)
+            # Get vehicle details from database instead of trackers
+            try:
+                # Get recent entries from database
+                recent_entries = self.db.get_recent_entries(50)  # Get more entries for better display
                 
-            if self.vehicle_counter_exit:
-                exit_details = self.vehicle_counter_exit.get_vehicle_details()
-                combined_details.extend(exit_details)
-            
-            print(f"Vehicle details API returning: {len(combined_details)} entries")
-            return jsonify(combined_details)
+                # Format entries for UI
+                vehicle_details = []
+                for i, entry in enumerate(recent_entries):
+                    # Determine status based on exit_time
+                    status = 'Exit' if entry.get('exit_time') else 'Entry'
+                    
+                    # Format times
+                    try:
+                        entry_time = datetime.fromisoformat(entry['entry_time']).strftime('%H:%M:%S') if entry['entry_time'] else 'N/A'
+                    except:
+                        entry_time = entry['entry_time'] if entry['entry_time'] else 'N/A'
+                    
+                    try:
+                        exit_time = datetime.fromisoformat(entry['exit_time']).strftime('%H:%M:%S') if entry['exit_time'] else 'N/A'
+                    except:
+                        exit_time = entry['exit_time'] if entry['exit_time'] else 'N/A'
+                    
+                    vehicle_details.append({
+                        'vehicle_id': f"V{1000+i}",
+                        'registration_number': entry['plate_number'],
+                        'vehicle_type': 'Car',  # Default to Car, could be enhanced with actual detection
+                        'status': status,
+                        'entry_time': entry_time,
+                        'exit_time': exit_time,
+                        'confidence': 0.95,  # Default confidence
+                        'is_employee': entry['is_employee'],
+                        'visit_count': entry['visit_count']
+                    })
+                
+                print(f"Vehicle details API returning: {len(vehicle_details)} entries from database")
+                return jsonify(vehicle_details)
+            except Exception as e:
+                logger.error(f"Error fetching vehicle details: {e}")
+                # Fallback to tracker details if database fails
+                combined_details = []
+                
+                if self.vehicle_counter_entry:
+                    entry_details = self.vehicle_counter_entry.get_vehicle_details()
+                    combined_details.extend(entry_details)
+                    
+                if self.vehicle_counter_exit:
+                    exit_details = self.vehicle_counter_exit.get_vehicle_details()
+                    combined_details.extend(exit_details)
+                
+                print(f"Vehicle details API returning: {len(combined_details)} entries from trackers (fallback)")
+                return jsonify(combined_details)
 
         @self.app.route('/start_monitoring', methods=['POST'])
         def start_monitoring():
@@ -204,11 +275,17 @@ class VehicleDashboard:
                 # Set camera source based on type
                 self.camera_sources[camera_type] = source
                 
-                # Initialize appropriate vehicle counter
+                # Initialize appropriate vehicle counter with camera type
                 if camera_type == 'entry':
-                    self.vehicle_counter_entry = WorkingVehicleTracker(confidence_threshold=confidence)
+                    self.vehicle_counter_entry = WorkingVehicleTracker(
+                        confidence_threshold=confidence,
+                        is_entry_camera=True
+                    )
                 else:  # exit
-                    self.vehicle_counter_exit = WorkingVehicleTracker(confidence_threshold=confidence)
+                    self.vehicle_counter_exit = WorkingVehicleTracker(
+                        confidence_threshold=confidence,
+                        is_entry_camera=False
+                    )
                 
                 self.is_processing = True
                 
@@ -334,7 +411,9 @@ class VehicleDashboard:
             'active_tracks': 0,
             'timestamp': datetime.now().isoformat(),
             'entry_exit_log': [],
-            'license_plates': []
+            'license_plates': [],
+            'recent_entries': [],
+            'recent_exits': []
         }
         
         # Get stats from entry camera if available
@@ -365,6 +444,15 @@ class VehicleDashboard:
             if 'license_plates' in exit_stats:
                 combined_stats['license_plates'].extend(exit_stats['license_plates'])
         
+        # Get recent entries and exits from database
+        try:
+            recent_entries = self.db.get_recent_entries(20)
+            # Separate entries and exits
+            combined_stats['recent_entries'] = [entry for entry in recent_entries if entry.get('exit_time') is None]
+            combined_stats['recent_exits'] = [entry for entry in recent_entries if entry.get('exit_time') is not None]
+        except Exception as e:
+            logger.error(f"Error fetching recent entries/exits: {e}")
+        
         return combined_stats
     
     def _generate_frames(self, camera_id='1'):
@@ -377,14 +465,14 @@ class VehicleDashboard:
             camera_source = self.camera_sources.get('entry', 0)
         else:  # camera_id == '2'
             vehicle_counter = self.vehicle_counter_exit
-            camera_source = self.camera_sources.get('exit', 1)
+            camera_source = self.camera_sources.get('exit', 'vehicle_test_video.mp4')  # Use test video for exit camera
         
         cap = None
         
         while True:
             if not self.is_processing:
                 # Show placeholder when not monitoring
-                placeholder = self._create_placeholder_frame()
+                placeholder = self._create_placeholder_frame(camera_id)
                 _, buffer = cv2.imencode('.jpg', placeholder)
                 frame_bytes = buffer.tobytes()
                 yield (b'--frame\r\n'
@@ -394,36 +482,33 @@ class VehicleDashboard:
             
             # Initialize camera when monitoring starts
             if cap is None:
-                logger.info(f"🎬 Opening camera {camera_source} for monitoring...")
-                cap = cv2.VideoCapture(camera_source)
+                logger.info(f"🎬 Opening camera/source {camera_source} for monitoring...")
+                # Handle both integer camera IDs and string video file paths
+                if isinstance(camera_source, int):
+                    cap = cv2.VideoCapture(camera_source)
+                else:
+                    # It's a video file path
+                    cap = cv2.VideoCapture(camera_source)
+                
                 if cap.isOpened():
-                    # Test if camera actually works
+                    # Test if source actually works
                     ret, test_frame = cap.read()
                     if ret and test_frame is not None:
-                        logger.info(f"✅ Camera {camera_source} opened successfully")
+                        logger.info(f"✅ Source {camera_source} opened successfully")
+                        # Reset to beginning for video files
+                        if not isinstance(camera_source, int):
+                            cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
                         # Set camera properties for better performance
                         cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
                         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
                         cap.set(cv2.CAP_PROP_FPS, 30)
                     else:
-                        logger.warning(f"⚠️ Camera {camera_source} opened but can't read frames")
+                        logger.warning(f"⚠️ Source {camera_source} opened but can't read frames")
                         cap.release()
                         cap = None
                 else:
-                    logger.warning(f"❌ Camera {camera_source} failed to open")
+                    logger.warning(f"❌ Source {camera_source} failed to open")
                     cap = None
-                
-                # If no camera found, try test videos
-                if cap is None:
-                    logger.info("📹 Trying vehicle test video...")
-                    cap = cv2.VideoCapture("vehicle_test_video.mp4")
-                    if cap.isOpened():
-                        logger.info("✅ Vehicle test video opened successfully")
-                    else:
-                        logger.info("📹 Trying basic test video...")
-                        cap = cv2.VideoCapture("test_video.mp4")
-                        if cap.isOpened():
-                            logger.info("✅ Basic test video opened successfully")
                 
                 # If still no source, create demo frames
                 if cap is None or not cap.isOpened():
@@ -434,6 +519,10 @@ class VehicleDashboard:
             if cap is not None and cap.isOpened():
                 ret, frame = cap.read()
                 if not ret:
+                    # For video files, loop back to the beginning
+                    if not isinstance(camera_source, int):
+                        cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                        continue
                     logger.warning("⚠️ Failed to read frame, releasing camera")
                     cap.release()
                     cap = None
@@ -453,16 +542,18 @@ class VehicleDashboard:
                                    (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
                 else:
                     processed_frame = frame.copy()
-                    cv2.putText(processed_frame, f"Live Camera Feed {camera_id}", 
+                    camera_type = "ENTRY" if camera_id == '1' else "EXIT"
+                    cv2.putText(processed_frame, f"Live Camera Feed ({camera_type})", 
                                (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
                 
             else:
                 # Demo mode - create synthetic frame
                 processed_frame = np.zeros((480, 640, 3), dtype=np.uint8)
                 processed_frame[:] = (40, 60, 80)
+                camera_type = "ENTRY" if camera_id == '1' else "EXIT"
                 cv2.putText(processed_frame, f"DEMO MODE - No Camera {camera_id} Detected", 
                            (50, 200), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
-                cv2.putText(processed_frame, "AI Vehicle Detection Active", 
+                cv2.putText(processed_frame, f"Camera Type: {camera_type}", 
                            (50, 250), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
                 cv2.putText(processed_frame, f"Time: {datetime.now().strftime('%H:%M:%S')}", 
                            (50, 300), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
@@ -494,22 +585,31 @@ class VehicleDashboard:
                 cap = None
                 logger.info("📹 Camera released")
     
-    def _create_placeholder_frame(self):
+    def _create_placeholder_frame(self, camera_id='1'):
         """Create a placeholder frame when no monitoring is active"""
         frame = np.zeros((480, 640, 3), dtype=np.uint8)
         frame[:] = (50, 50, 50)  # Dark gray background
         
-        text = "Click 'Start Monitoring' to begin"
+        camera_type = "ENTRY" if camera_id == '1' else "EXIT"
+        text_lines = [
+            f"Camera {camera_id} - {camera_type}",
+            "Click 'Start Monitoring' to begin",
+            f"Time: {datetime.now().strftime('%H:%M:%S')}"
+        ]
+        
         font = cv2.FONT_HERSHEY_SIMPLEX
         font_scale = 0.8
         color = (255, 255, 255)
         thickness = 2
         
-        text_size = cv2.getTextSize(text, font, font_scale, thickness)[0]
-        x = (frame.shape[1] - text_size[0]) // 2
-        y = (frame.shape[0] + text_size[1]) // 2
+        y_start = (frame.shape[0] - len(text_lines) * 40) // 2
         
-        cv2.putText(frame, text, (x, y), font, font_scale, color, thickness)
+        for i, text in enumerate(text_lines):
+            text_size = cv2.getTextSize(text, font, font_scale, thickness)[0]
+            x = (frame.shape[1] - text_size[0]) // 2
+            y = y_start + i * 40 + 30
+            cv2.putText(frame, text, (x, y), font, font_scale, color, thickness)
+        
         return frame
     
     def _create_error_frame(self, error_message):

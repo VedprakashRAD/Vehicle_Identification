@@ -40,6 +40,8 @@ class DatabaseManager:
                 plate_number TEXT,
                 vehicle_color TEXT,
                 vehicle_brand TEXT,
+                estimated_country TEXT DEFAULT 'unknown',
+                is_enhanced BOOLEAN DEFAULT FALSE,
                 entry_time DATETIME,
                 exit_time DATETIME,
                 is_employee BOOLEAN,
@@ -86,49 +88,92 @@ class DatabaseManager:
         
         return result[0] > 0 if result else False
     
-    def log_vehicle_entry(self, plate_number, vehicle_color, vehicle_brand, is_employee, camera_entry):
-        """Log a vehicle entry"""
+    def log_vehicle_entry(self, plate_number, vehicle_color, vehicle_brand, is_employee, camera_entry, 
+                         estimated_country='unknown', is_enhanced=False):
+        """Log a vehicle entry with enhanced information"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
-        # Check if this is a repeat visit
-        cursor.execute('''
-            SELECT visit_count FROM vehicle_entries 
-            WHERE plate_number = ? 
-            ORDER BY entry_time DESC 
-            LIMIT 1
-        ''', (plate_number,))
-        
-        result = cursor.fetchone()
-        visit_count = 1
-        if result:
-            visit_count = result[0] + 1
-        
-        # Insert new entry
-        cursor.execute('''
-            INSERT INTO vehicle_entries 
-            (plate_number, vehicle_color, vehicle_brand, entry_time, is_employee, camera_entry, visit_count)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (plate_number, vehicle_color, vehicle_brand, datetime.now(), is_employee, camera_entry, visit_count))
-        
-        conn.commit()
-        conn.close()
+        try:
+            # Check if this is a repeat visit by looking for previous entries without exit
+            cursor.execute('''
+                SELECT visit_count FROM vehicle_entries 
+                WHERE plate_number = ? AND exit_time IS NULL
+                ORDER BY entry_time DESC 
+                LIMIT 1
+            ''', (plate_number,))
+            
+            result = cursor.fetchone()
+            visit_count = 1
+            if result:
+                # Vehicle is already in (no exit recorded), update visit count
+                visit_count = result[0] + 1
+                # Update the existing entry with new visit count
+                cursor.execute('''
+                    UPDATE vehicle_entries 
+                    SET visit_count = ?, entry_time = ?
+                    WHERE plate_number = ? AND exit_time IS NULL
+                ''', (visit_count, datetime.now(), plate_number))
+            else:
+                # New entry or previous entry has exit time
+                # Check for previous visits
+                cursor.execute('''
+                    SELECT MAX(visit_count) FROM vehicle_entries 
+                    WHERE plate_number = ?
+                ''', (plate_number,))
+                
+                result = cursor.fetchone()
+                if result and result[0]:
+                    visit_count = result[0] + 1
+                
+                # Insert new entry with enhanced information
+                cursor.execute('''
+                    INSERT INTO vehicle_entries 
+                    (plate_number, vehicle_color, vehicle_brand, estimated_country, is_enhanced, 
+                     entry_time, is_employee, camera_entry, visit_count)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (plate_number, vehicle_color, vehicle_brand, estimated_country, is_enhanced,
+                      datetime.now(), is_employee, camera_entry, visit_count))
+            
+            conn.commit()
+            print(f"🚗 Vehicle ENTRY logged: {plate_number} (Visit #{visit_count})")
+        except Exception as e:
+            print(f"Error logging vehicle entry: {e}")
+        finally:
+            conn.close()
     
     def log_vehicle_exit(self, plate_number):
         """Log a vehicle exit"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
-        cursor.execute('''
-            UPDATE vehicle_entries 
-            SET exit_time = ?
-            WHERE plate_number = ? AND exit_time IS NULL
-            ORDER BY entry_time DESC 
-            LIMIT 1
-        ''', (datetime.now(), plate_number))
-        
-        conn.commit()
-        conn.close()
+        try:
+            # Find the most recent entry without an exit time
+            cursor.execute('''
+                SELECT id FROM vehicle_entries 
+                WHERE plate_number = ? AND exit_time IS NULL
+                ORDER BY entry_time DESC 
+                LIMIT 1
+            ''', (plate_number,))
+            
+            result = cursor.fetchone()
+            if result:
+                # Update the exit time for this entry
+                cursor.execute('''
+                    UPDATE vehicle_entries 
+                    SET exit_time = ?
+                    WHERE id = ?
+                ''', (datetime.now(), result[0]))
+                
+                conn.commit()
+                print(f"🚗 Vehicle EXIT logged: {plate_number}")
+            else:
+                # No entry found, this might be an error or vehicle was already logged as exited
+                print(f"⚠️ No active entry found for vehicle: {plate_number}")
+        except Exception as e:
+            print(f"Error logging vehicle exit: {e}")
+        finally:
+            conn.close()
     
     def get_recent_entries(self, limit=20):
         """Get recent vehicle entries"""
@@ -136,7 +181,7 @@ class DatabaseManager:
         cursor = conn.cursor()
         
         cursor.execute('''
-            SELECT plate_number, vehicle_color, vehicle_brand, entry_time, exit_time, is_employee, visit_count
+            SELECT plate_number, vehicle_color, vehicle_brand, estimated_country, is_enhanced, entry_time, exit_time, is_employee, visit_count
             FROM vehicle_entries
             ORDER BY entry_time DESC
             LIMIT ?
@@ -151,10 +196,12 @@ class DatabaseManager:
                 'plate_number': row[0],
                 'vehicle_color': row[1],
                 'vehicle_brand': row[2],
-                'entry_time': row[3],
-                'exit_time': row[4],
-                'is_employee': row[5],
-                'visit_count': row[6]
+                'estimated_country': row[3],
+                'is_enhanced': row[4],
+                'entry_time': row[5],
+                'exit_time': row[6],
+                'is_employee': row[7],
+                'visit_count': row[8]
             })
         
         return entries

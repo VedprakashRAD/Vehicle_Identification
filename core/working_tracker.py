@@ -13,22 +13,35 @@ except ImportError:
     logging.warning("Ultralytics YOLO not available, using demo mode")
 
 try:
-    from license_plate.intelligent_detector import IntelligentLicensePlateDetector
+    # Try importing the Ultimate ALPR Enhanced system first
+    from license_plate.ultimate_alpr_enhanced import UltimateEnhancedLicensePlateDetector
     PLATE_DETECTION_AVAILABLE = True
 except ImportError:
-    PLATE_DETECTION_AVAILABLE = False
-    logging.warning("No plate detection available")
+    # Fallback to the improved ANPR system
+    try:
+        from license_plate.improved_anpr import ImprovedANPR as UltimateEnhancedLicensePlateDetector
+        PLATE_DETECTION_AVAILABLE = True
+    except ImportError:
+        # Fallback to the original detector
+        try:
+            from license_plate.intelligent_detector import IntelligentLicensePlateDetector as UltimateEnhancedLicensePlateDetector
+            PLATE_DETECTION_AVAILABLE = True
+        except ImportError:
+            PLATE_DETECTION_AVAILABLE = False
+            logging.warning("No plate detection available")
 
 from config.settings import model_config, ui_config
 from database.manager import DatabaseManager
+from core.vehicle_pairing import VehiclePairingManager
 
 logger = logging.getLogger(__name__)
 
 class WorkingVehicleTracker:
     """Enhanced vehicle tracking with improved modularity and performance"""
     
-    def __init__(self, confidence_threshold: float = None):
+    def __init__(self, confidence_threshold: float = None, is_entry_camera: bool = True):
         self.confidence_threshold = confidence_threshold or model_config.CONFIDENCE_THRESHOLD
+        self.is_entry_camera = is_entry_camera  # True for entry camera, False for exit camera
         self.vehicle_counts = {'car': 0, 'motorcycle': 0, 'bus': 0, 'truck': 0}
         self.total_count = 0
         self.active_tracks = 0
@@ -39,6 +52,7 @@ class WorkingVehicleTracker:
         self.license_plate_detections = deque(maxlen=50)  # Use deque for better performance
         self.frame_count = 0
         self.db_manager = DatabaseManager()
+        self.pairing_manager = VehiclePairingManager()
         
         # Vehicle tracking with recent plates cache
         self.tracked_vehicles = {}
@@ -83,9 +97,9 @@ class WorkingVehicleTracker:
             return
             
         try:
-            logger.info("Loading plate detector")
-            self.plate_detector = IntelligentLicensePlateDetector()
-            logger.info("Using traditional detector")
+            logger.info("Loading Ultimate ALPR Enhanced system")
+            self.plate_detector = UltimateEnhancedLicensePlateDetector()
+            logger.info("Using Ultimate ALPR Enhanced detector")
                 
         except Exception as e:
             logger.error(f"Error loading detector: {e}")
@@ -225,19 +239,42 @@ class WorkingVehicleTracker:
                             vehicle_color = self._detect_vehicle_color(frame, bbox)
                             vehicle_brand = self._detect_vehicle_brand(frame, bbox)
                             
-                            # Determine entry/exit based on camera position
-                            # For this implementation, we'll assume entry camera (True)
-                            # In a real implementation, this would be determined by which camera triggered
-                            camera_entry = True
+                            # Extract additional information from plate detection if available
+                            estimated_country = plate_result.get('estimated_country', 'unknown')
+                            is_enhanced = plate_result.get('enhanced', False)
                             
-                            # Log entry
-                            self.db_manager.log_vehicle_entry(
-                                plate_text, 
-                                vehicle_color, 
-                                vehicle_brand, 
-                                is_employee, 
-                                camera_entry
+                            # Extract enhanced information
+                            estimated_country = plate_result.get('estimated_country', 'unknown')
+                            is_enhanced = plate_result.get('enhanced', False)
+                            
+                            # Add detection to pairing system
+                            # Camera 1 is entry camera, Camera 2 is exit camera
+                            camera_id = 1 if self.is_entry_camera else 2
+                            self.pairing_manager.add_plate_detection(
+                                plate_text,
+                                camera_id,
+                                vehicle_color,
+                                vehicle_brand,
+                                is_employee
                             )
+                            
+                            # Also log to original system for backward compatibility
+                            if self.is_entry_camera:
+                                # Log entry with enhanced information
+                                self.db_manager.log_vehicle_entry(
+                                    plate_text, 
+                                    vehicle_color, 
+                                    vehicle_brand, 
+                                    is_employee, 
+                                    True,  # camera_entry = True for entry camera
+                                    estimated_country,
+                                    is_enhanced
+                                )
+                                logger.info(f"🚗 Vehicle ENTRY logged: {plate_text} (Enhanced: {is_enhanced})")
+                            else:
+                                # Log exit
+                                self.db_manager.log_vehicle_exit(plate_text)
+                                logger.info(f"🚗 Vehicle EXIT logged: {plate_text}")
                 
                 # Draw license plate detections
                 self.plate_detector.draw_plate_detections(processed_frame, plate_results)
@@ -387,7 +424,7 @@ class WorkingVehicleTracker:
         """Add information overlay to frame with constants for positioning"""
         # Constants for overlay positioning
         OVERLAY_X, OVERLAY_Y = 10, 10
-        OVERLAY_WIDTH, OVERLAY_HEIGHT = 350, 140
+        OVERLAY_WIDTH, OVERLAY_HEIGHT = 350, 160
         TEXT_START_X, TEXT_START_Y = 20, 30
         LINE_HEIGHT = 25
         SMALL_LINE_HEIGHT = 20
@@ -399,6 +436,9 @@ class WorkingVehicleTracker:
         
         # Add text with proper positioning
         y_pos = TEXT_START_Y
+        camera_type = "ENTRY" if self.is_entry_camera else "EXIT"
+        cv2.putText(frame, f'{camera_type} CAMERA', (TEXT_START_X, y_pos), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+        y_pos += LINE_HEIGHT
         cv2.putText(frame, f'Total: {self.total_count}', (TEXT_START_X, y_pos), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
         y_pos += LINE_HEIGHT
         cv2.putText(frame, f'Active: {self.active_tracks}', (TEXT_START_X, y_pos), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
@@ -406,10 +446,10 @@ class WorkingVehicleTracker:
         
         # Vehicle counts with colors
         cv2.putText(frame, f'Cars: {self.vehicle_counts["car"]}', (TEXT_START_X, y_pos), cv2.FONT_HERSHEY_SIMPLEX, 0.5, ui_config.COLORS['car'], 1)
-        cv2.putText(frame, f'Motorcycles: {self.vehicle_counts["motorcycle"]}', (TEXT_START_X + 100, y_pos), cv2.FONT_HERSHEY_SIMPLEX, 0.5, ui_config.COLORS['motorcycle'], 1)
+        cv2.putText(frame, f'Motorcycles: {self.vehicle_counts["motorcycle"]}', (TEXT_START_X + 120, y_pos), cv2.FONT_HERSHEY_SIMPLEX, 0.5, ui_config.COLORS['motorcycle'], 1)
         y_pos += SMALL_LINE_HEIGHT
         cv2.putText(frame, f'Buses: {self.vehicle_counts["bus"]}', (TEXT_START_X, y_pos), cv2.FONT_HERSHEY_SIMPLEX, 0.5, ui_config.COLORS['bus'], 1)
-        cv2.putText(frame, f'Trucks: {self.vehicle_counts["truck"]}', (TEXT_START_X + 100, y_pos), cv2.FONT_HERSHEY_SIMPLEX, 0.5, ui_config.COLORS['truck'], 1)
+        cv2.putText(frame, f'Trucks: {self.vehicle_counts["truck"]}', (TEXT_START_X + 120, y_pos), cv2.FONT_HERSHEY_SIMPLEX, 0.5, ui_config.COLORS['truck'], 1)
         
     def get_recent_license_plates(self, limit: int = 10) -> List[Dict]:
         """Get recent license plate detections"""
@@ -448,11 +488,14 @@ class WorkingVehicleTracker:
             except (KeyError, ValueError):
                 entry_time = datetime.now().strftime('%H:%M:%S')
             
+            # Determine status based on camera type
+            status = 'Entry' if self.is_entry_camera else 'Exit'
+            
             details.append({
                 'vehicle_id': plate.get('vehicle_id', f'V{i+1}'),
                 'registration_number': plate.get('plate_text', 'Unknown'),
                 'vehicle_type': vehicle_type.title(),
-                'status': 'Entry',
+                'status': status,
                 'entry_time': entry_time,
                 'exit_time': None,
                 'confidence': confidence
@@ -460,11 +503,12 @@ class WorkingVehicleTracker:
         
         # Add demo data if no plates detected
         if not details:
+            status = 'Entry' if self.is_entry_camera else 'Exit'
             details.append({
                 'vehicle_id': 'V001',
                 'registration_number': 'ABC-123',
                 'vehicle_type': 'Car',
-                'status': 'Entry',
+                'status': status,
                 'entry_time': datetime.now().strftime('%H:%M:%S'),
                 'exit_time': None,
                 'confidence': 0.95
